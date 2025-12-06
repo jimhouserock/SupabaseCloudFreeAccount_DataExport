@@ -1,48 +1,59 @@
-# Supabase Cloud Data Extraction (Free Method)
+# Supabase Cloud Data Export for Free Accounts
 
-Extract all your data from Supabase Cloud without paying for the database export feature.
+A practical solution for exporting data from Supabase free-tier projects when standard export methods are unavailable.
 
-## Method: Supabase Management API
+## The Challenge
 
-This method uses the **Supabase Management API** to execute SQL queries directly against your database, bypassing the need for direct PostgreSQL connections (which are IPv6-only and often inaccessible).
+Supabase free accounts face several data export limitations:
 
-### Why This Works
+1. **IPv6-only database connections** - Direct PostgreSQL connections fail on many systems (especially Docker on Windows)
+2. **No Just-In-Time Recovery** - Database backups require a paid plan
+3. **Limited UI export options** - The dashboard provides minimal export functionality
+4. **Connection pooler restrictions** - Some projects encounter "Tenant or user not found" errors
 
-1. **Direct database connections fail** because Supabase databases use IPv6-only addresses, which many systems (especially Docker on Windows) cannot reach
-2. **Connection pooler fails** with "Tenant or user not found" errors for some projects
-3. **Management API works** because it routes through Supabase's infrastructure, handling the IPv6 connectivity internally
+These constraints make it difficult to export your own data, even though you own it.
 
-### Prerequisites
+## The Solution
+
+This project uses the **Supabase Management API** to extract data directly through authenticated API calls. This approach:
+
+- Works reliably regardless of IPv6 connectivity issues
+- Requires only your API token (no direct database connection needed)
+- Extracts complete database structure and data
+- Generates both JSON and SQL formats for flexibility
+
+## Prerequisites
 
 - Python 3.x
 - `requests` library (`pip install requests`)
 - Supabase API Token (from https://supabase.com/dashboard/account/tokens)
-- Your Project ID (from project URL: `https://supabase.com/dashboard/project/{PROJECT_ID}`)
+- Your Project ID (from your project URL: `https://supabase.com/dashboard/project/{PROJECT_ID}`)
 
-### How to Get Your API Token
+## Getting Your API Token
 
-1. Go to https://supabase.com/dashboard/account/tokens
+1. Visit https://supabase.com/dashboard/account/tokens
 2. Click "Generate new token"
-3. Give it a name and copy the token (starts with `sbp_`)
+3. Give it a descriptive name
+4. Copy the token (starts with `sbp_`)
 
-### Usage
+## Usage
 
-1. Edit `extract_supabase_data.py` and update these values:
-   ```python
-   PROJECT_ID = "your-project-id"
-   API_TOKEN = "sbp_your_api_token_here"
+1. Set environment variables:
+   ```bash
+   export SUPABASE_PROJECT_ID="your-project-id"
+   export SUPABASE_API_TOKEN="sbp_your_api_token_here"
    ```
 
 2. Run the script:
    ```bash
-   python extract_supabase_data.py
+   python extract_supabase_data_template.py
    ```
 
-3. Find your backups in the `backups/` folder:
+3. Find your exports in the `backups/` folder:
    - `supabase_complete_backup_{project_id}_{timestamp}.json` - Complete JSON backup
    - `supabase_schema_dump_{project_id}_{timestamp}.sql` - SQL dump with schema and data
 
-### What Gets Exported
+## What Gets Exported
 
 | Data Type | Description |
 |-----------|-------------|
@@ -57,7 +68,9 @@ This method uses the **Supabase Management API** to execute SQL queries directly
 | Indexes | Table indexes |
 | Foreign Keys | Foreign key relationships |
 
-### API Endpoint Used
+## API Details
+
+The script uses the Supabase Management API endpoint:
 
 ```
 POST https://api.supabase.com/v1/projects/{project_id}/database/query
@@ -69,19 +82,19 @@ Content-Type: application/json
 
 **Note:** This endpoint returns HTTP 201 for successful queries (not 200).
 
-### Limitations
+## Limitations
 
 - Storage files (actual binary content) are not downloaded - only metadata
 - Very large tables may timeout (120 second limit per query)
 - Rate limits may apply for very large databases
 
-### Troubleshooting
+## Troubleshooting
 
 **"Error executing query: 401"**
-- Your API token is invalid or expired. Generate a new one.
+- Your API token is invalid or expired. Generate a new one from the dashboard.
 
 **"Error executing query: 404"**
-- Project ID is incorrect. Check your project URL.
+- Project ID is incorrect. Verify it matches your project URL.
 
 **Timeout errors**
 - For very large tables, modify the script to use pagination with `LIMIT` and `OFFSET`.
