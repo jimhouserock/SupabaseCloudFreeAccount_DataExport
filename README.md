@@ -1,4 +1,4 @@
-# Supabase Cloud Data Export for Free Accounts
+# Supabase Cloud Data Export for Free Accounts (working as December 2025)
 
 A practical solution for exporting data from Supabase free-tier projects when standard export methods are unavailable.
 
